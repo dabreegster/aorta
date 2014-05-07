@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Use only deps from this directory
+rm -f target/pack/lib/aorta_2.10-0.1-SNAPSHOT.jar
+DEPS="target/pack/lib/*"
+AORTA_CLASSES="target/scala-2.10/classes/"
+CLASSPATH="$AORTA_CLASSES:$DEPS"
+
+JVM_OPTS="-Xmx1536m"
+
+SCALA="java -cp $CLASSPATH $JVM_OPTS -Dscala.usejavacp=true"

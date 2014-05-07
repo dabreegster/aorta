@@ -1,0 +1,5 @@
+#!/bin/bash
+# Run from the base AORTA directory: ./tools/auction_experiment
+
+. common
+$SCALA utexas.aorta.analysis.AuctionExperiment $@

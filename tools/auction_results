@@ -1,0 +1,5 @@
+#!/bin/bash
+# Run from the base AORTA directory: ./tools/auction_results
+
+Rscript reports/auction_time_report.r $@
+Rscript reports/auction_money_report.r $@

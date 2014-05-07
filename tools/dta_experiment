@@ -1,0 +1,5 @@
+#!/bin/bash
+# Run from the base AORTA directory: ./tools/dta_experiment
+
+. common
+$SCALA utexas.aorta.analysis.DTAExperiment $@

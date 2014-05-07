@@ -1,0 +1,3 @@
+#!/bin/bash
+. common
+$SCALA utexas.aorta.ui.GUI $@

@@ -1,0 +1,189 @@
+# TODO #
+
+####################################################################################################
+### Current projects
+
+# Intersection policies #
+
+- people are pausing a bit before they go in signal
+- are people choosing lanes well?
+- yield policy
+
+- reservation protocol should actually be faster. opportunistic.
+  - michael's refined notion of turn conflict
+- unprotected left, right turn on red, better stop sign
+- optimize fixpoints
+
+# Zones #
+
+- fix nondeterminism
+- pathfinding totally breaks for some: perform_reroute's choice should be from router?
+- benchmark
+
+# Nouveau Congestion #
+
+- test freq of updating / current router with 3 auditors
+- reroute when something in route changes
+- diffused/zone-based congestion metric
+- live DTA... use latest link delays all the time, and dont bother with 2-tuple score.
+  - put it in link auditor, just use normal a*, not even time dep.
+  - how long does it take to cross a zone?
+- mathvector as score for A* and related?
+
+- tradeoffs and combos of things to do...
+  - when to reroute?
+  - base congestion: 80% of static, 50% of freeflow, ???
+  - use real link delay or time/congestion system?
+  - 3 types of congestion reporting
+  - later: zones...
+
+# Code cleanup #
+
+- rename edges as lanes? policy -> controller? vertex -> junction? agent -> driver? behavior -> pilot?
+  route -> navigator?
+- hard to have multiple sims due to objects with state: Graph (norm coords), system wallets,
+  AgentMap, ReplayDiffScheme, GUI
+- reduce vars and publics and mutable collections
+- distance/time types
+- merge headless/gui clients
+
+# Experiment framework #
+
+- mode to run many things locally, in parallel
+- port old experiments
+- even record the parameters of the runs?
+- revamp ModScenarioTool
+- warm up period for measurements?
+
+####################################################################################################
+### Future projects
+
+# Bugs #
+
+- savestating
+  - bad filenames when saving from a loaded savestate
+  - resumable logging doesnt really work if they simulated past the savestate...
+
+# Auctions #
+
+- sysbids
+  - doubles
+  - tune
+  - divide
+  - new one to help people at the end of trip (since theyll leave the system)
+- multiple bids for same item.. handle that
+- system bid: bonus to reservation if i'll take the same time as somebody else
+- better wallet than fair. (but its not only problem, fixed mode is also borked)
+
+# Clown Car #
+
+- change limit of never-toll from 3 to 5
+- sticky congested/clear state.
+- take into account time and cost simultaneously
+- regular rerouting
+- tolls justified thru fundamental diagram
+
+# Debugging, info, etc #
+
+- different measure of live vs moved agents. cumulative
+- debugging useful: warn when turn not used for a while, and when agent caught in a long loop
+- is it even valid to consider results from first/last agents? need steady-state.
+- measure how long a vehicle spends thrashing about bc original path is congested
+
+# Trip distribution #
+
+- residence -> house
+- repository of detailed cities with demand data?
+
+# Traffic model simplification #
+
+- dont mess with gps coords
+
+# Hard realism #
+
+- different agent params
+  - modular agent behavior, like give up on LC vs slow down for it
+- tune all params
+
+# Tests #
+
+- how?
+- wacky cases of 2 side-by-side agents wanting to swap places?
+
+# Performance: misc #
+
+- possible optimization: store pred/succ for agents directly, dont rely on queue
+- .view, .withFilter
+- turn blocked invariant, really maintain it for efficiency!
+  just look at the next guy. BUT we can be route-done, but have somebody blocking in front of us
+  initially. so in that case, search forward?
+  - this only happens because we join a queue without demanding invariants of stuff in front of us
+- faster congestion rerouting idea: flood from current point, avoiding congestion, till we reach a
+  road in our old path
+
+# Performance: fastpaths #
+
+- agents and intersections could wake each other up now
+
+# Performance: parallelization #
+
+- agent react() is fine except for events, maybe
+
+# Map making #
+
+- find all cases where you can enter a road from one lane only and not reach all succs from that lane (aka have to LC)
+- not sure: if LC dist is > road dist, super problems
+- min lengths should matter for lanes everywhere, not roads
+- degenerate verts should have same num of lanes
+- num of lanes bounded by num of times could LC
+- floating vertices due to nuking all roads that lead up to it, and choosing
+  the vert to keep poorly
+- road artifacts should match number of lanes, visually capture entire area where agents turn
+  - and not be there when orig road is removed
+- handle cul de sacs once and for all... bernwood is example in BR. remove if
+  only one other link?
+- dont tie map filename to the serialized thing
+- xml output too for non-aorta clients
+- make turns better, more systematically
+  - try to not remove pieces of maps at all
+- use http://wiki.openstreetmap.org/wiki/Relation:restriction
+- lots of things break in sim logic if we have a vertex with a self-loop
+
+# 3D GUI: Base #
+
+- make a thing to change some constants online...
+- port all content things to lwjgl
+- better overhead controls
+- perspective camera
+- 3D buildings
+
+# UI #
+
+- color intersections neutrally
+- visualize red/green lights better
+- visualize lookahead
+- right click context menus
+- show 'fps' in viewer
+- side by side runs
+
+# Website #
+
+- how to use
+  - make sure git repo isnt too huge
+  - eclipse tutorial
+  - gui controls
+  - how to run experiments
+    - ex: actuator roads before equal mode
+    - ex: braess paradox and adding a road
+  - bigger tasks
+    - tutorial for v2v, dta
+    - howto try an optimization
+    - howto see if your code change keeps the same stuff
+
+- better layout
+  - contact me
+- screenshots
+- about/features page
+- advertise on OSM wiki
+- list of concepts
+  - map stuff, sim stuff, infrastructure stuff

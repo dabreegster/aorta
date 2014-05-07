@@ -1,0 +1,10 @@
+# vim swapfiles
+*.swp
+
+# OSM maps, converted maps, and scenarios shouldn't go under main version control
+osm/
+maps/
+scenarios/
+
+# sbt
+target/

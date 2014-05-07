@@ -1,0 +1,5 @@
+You need 'gcutil' and 'gsutil' on your PATH for these scripts. You can grab them from the Google
+Cloud SDK:
+
+wget https://dl.google.com/dl/cloudsdk/google-cloud-sdk-0.9.8-linux-python.zip
+  (https://developers.google.com/cloud/sdk/ for the link to the latest version)

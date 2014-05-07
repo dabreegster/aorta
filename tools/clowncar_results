@@ -1,0 +1,5 @@
+#!/bin/bash
+# Run from the base AORTA directory: ./tools/clowncar_results
+
+Rscript reports/clowncar_time_report.r $@
+Rscript reports/clowncar_congestion_report.r $@

@@ -1,0 +1,4 @@
+#!/bin/bash
+. common
+cmd=$1
+$SCALA ${cmd/.scala/} ${*:2}

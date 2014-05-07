@@ -1,0 +1,4 @@
+#!/bin/bash
+# Run from the base AORTA directory: ./tools/plot_sim_speed
+
+Rscript reports/sim_speed_report.r $@
