@@ -35,22 +35,6 @@ object ScenarioPresets {
       intersections = s.intersections.map(_.copy(policy = IntersectionType.Reservation))
     )
 
-    case "clowncar_smart_intersections" => s.copy(
-      // System bids on by default
-      intersections = s.intersections.map(_.copy(ordering = OrderingType.Auction)),
-      agents = s.agents.map(a => a.copy(wallet = a.wallet.copy(budget = 1, policy = WalletType.Static)))
-    )
-    case "clowncar_use_dumbtoll_router" => s.copy(
-      agents = s.agents.map(a => a.copy(
-        route = a.route.copy(orig_router = RouterType.DumbToll, rerouter = RouterType.DumbToll)
-      ))
-    )
-    case "clowncar_use_sumtoll_router" => s.copy(
-      agents = s.agents.map(a => a.copy(
-        route = a.route.copy(orig_router = RouterType.SumToll, rerouter = RouterType.SumToll)
-      ))
-    )
-
     // TODO there are many baselines
     case "milo_today" => s.copy(
       intersections = s.intersections.map(_.copy(policy = IntersectionType.Signal)),

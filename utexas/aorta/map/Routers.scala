@@ -60,62 +60,6 @@ class FreeflowRouter(graph: Graph) extends AbstractPairAstarRouter(graph) with S
   )
 }
 
-// Cost for each step is (dollars, time)
-trait TollAndTimeCost extends AbstractPairAstarRouter {
-  override def transform(spec: Pathfind) = super.transform(spec).copy(
-    calc_cost = (prev: Road, next: Road, cost_sofar: (Double, Double)) =>
-      (next.road_agent.toll.dollars, next.freeflow_time)
-  )
-}
-
-// Score is (number of congested roads, total freeflow time)
-class CongestionRouter(graph: Graph) extends AbstractPairAstarRouter(graph) with SimpleHeuristic {
-  override def router_type = RouterType.Congestion
-  override def transform(spec: Pathfind) = super.transform(spec).copy(
-    calc_cost = (prev: Road, next: Road, cost_sofar: (Double, Double)) =>
-      (Util.bool2binary(next.road_agent.congested), next.freeflow_time)
-  )
-}
-
-// Score is (max congestion toll, total freeflow time)
-class DumbTollRouter(graph: Graph) extends AbstractPairAstarRouter(graph)
-  with SimpleHeuristic with TollAndTimeCost
-{
-  override def router_type = RouterType.DumbToll
-  override def transform(spec: Pathfind) = super.transform(spec).copy(
-    add_cost = (a: (Double, Double), b: (Double, Double)) => (math.max(a._1, b._1), a._2 + b._2)
-  )
-}
-
-// Score is (number of toll violations, total freeflow time)
-// We have a max_toll we're willing to pay, so we try to never pass through a road with that toll
-class TollThresholdRouter(graph: Graph) extends AbstractPairAstarRouter(graph) with SimpleHeuristic
-{
-  private var max_toll: Price = new Price(-1)
-
-  override def setup(a: Agent) {
-    max_toll = new Price((a.wallet.priority * 100).toInt)
-  }
-
-  override def router_type = RouterType.TollThreshold
-  override def transform(spec: Pathfind) = super.transform(spec).copy(
-    calc_cost = (prev: Road, next: Road, cost_sofar: (Double, Double)) =>
-      (Util.bool2binary(next.road_agent.toll.dollars > max_toll.dollars), next.freeflow_time)
-  )
-}
-
-// Score is (sum of tolls, total freeflow time). The answer is used as the "free" baseline with the
-// least cost to others.
-class SumTollRouter(graph: Graph) extends AbstractPairAstarRouter(graph)
-  with SimpleHeuristic with TollAndTimeCost
-{
-  override def router_type = RouterType.SumToll
-  override def transform(spec: Pathfind) = super.transform(spec).copy(
-    calc_cost = (prev: Road, next: Road, cost_sofar: (Double, Double)) =>
-      (next.road_agent.toll.dollars, next.freeflow_time)
-  )
-}
-
 object TollboothRouter {
   var toll_weight = 0.1
 }

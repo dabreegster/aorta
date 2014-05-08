@@ -70,7 +70,7 @@ object AgentDistribution {
       MkAgent(
         new AgentID(id), time, start.id, start.rightmost.safe_spawn_dist(rng),
         MkRoute(
-          RouterType.Congestion, RouterType.Congestion, Array(), rng.choose(ends).id,
+          RouterType.LatestEstimate, RouterType.LatestEstimate, Array(), rng.choose(ends).id,
           ReroutePolicyType.Never
         ),
         MkWallet(rng.choose(wallets), budget, rng.double(0, 1), false /* bid_ahead */)
@@ -95,7 +95,7 @@ object AgentDistribution {
       result += MkAgent(
         new AgentID(id), time, start.id, start.rightmost.safe_spawn_dist(rng),
         MkRoute(
-          RouterType.Congestion, RouterType.Congestion, Array(), rng.choose(ends).id,
+          RouterType.LatestEstimate, RouterType.LatestEstimate, Array(), rng.choose(ends).id,
           ReroutePolicyType.Never
         ),
         MkWallet(rng.choose(wallets), budget, rng.double(0, 1), false /* bid_ahead */)
