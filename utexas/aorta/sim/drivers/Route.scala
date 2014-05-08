@@ -147,7 +147,7 @@ class PathRoute(
     val must_reroute = e.next_turns.filter(t => t.to.road == dest).isEmpty
     // This variant only considers long roads capable of being congested, which is risky...
     // TODO make the client do this? yes! remove policy from mechanism.
-    val should_reroute = dest.road_agent.congested
+    val should_reroute = dest.congested
 
     val turn = if (!query_only && (must_reroute || should_reroute)) {
       if (must_reroute) {

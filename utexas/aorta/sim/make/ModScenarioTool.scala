@@ -71,7 +71,7 @@ object ModScenarioTool {
         Util.log(s"Initializing empty scenario on $input...")
         s = Scenario(
           s"scenarios/empty_${input}", input, Array(), Array(),
-          SystemWalletConfig(), CongestionType.withName(cfg.road_agent)
+          SystemWalletConfig()
         )
         s = s.copy(
           intersections = IntersectionDistribution.default(graph)
@@ -198,11 +198,6 @@ object ModScenarioTool {
 
           Util.log(s"Changing system wallet configuration: $wallet")
           s = s.copy(system_wallet = wallet)
-        }
-        case "--road_agent" => {
-          val road_agent = CongestionType.withName(shift_args)
-          Util.log(s"Changing road agent: $road_agent")
-          s = s.copy(road_agent = road_agent)
         }
         case "--preset" => {
           val preset = shift_args

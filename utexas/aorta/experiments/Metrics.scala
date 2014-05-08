@@ -152,7 +152,7 @@ class RoadCongestionMetric(info: MetricInfo) extends HistogramMetric(info, 10.0)
   override def name = "road_congestion"
 
   info.sim.listen(classOf[EV_Transition], _ match {
-    case EV_Transition(a, _, to: Edge) => histogram.add(to.road.road_agent.freeflow_percent_full)
+    case EV_Transition(a, _, to: Edge) => histogram.add(to.road.freeflow_percent_full)
     case _ =>
   })
 }

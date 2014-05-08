@@ -18,7 +18,7 @@ import utexas.aorta.common.{Util, StateWriter, StateReader, AgentID, VertexID, R
 // Array index and agent/intersection ID must correspond. Creator's responsibility.
 case class Scenario(
   name: String, map_fn: String, agents: Array[MkAgent], intersections: Array[MkIntersection],
-  system_wallet: SystemWalletConfig, road_agent: CongestionType.Value
+  system_wallet: SystemWalletConfig
 ) extends Serializable {
   def graph = Graph.load(map_fn)
   def make_sim() = new Simulation(this)
@@ -29,7 +29,6 @@ case class Scenario(
   }
 
   def make_intersection(v: Vertex, sim: Simulation) = intersections(v.id.int).make(v, sim)
-  def make_road_agent(r: Road, sim: Simulation) = CongestionType.make(road_agent, r, sim)
 
   // Although the massive numbers of agents were probably created with a
   // distribution function originally, we just see the individual list in the
@@ -41,7 +40,6 @@ case class Scenario(
     ScenarioUtil.percentages(intersections.map(_.policy))
     Util.log("Intersection orderings:")
     ScenarioUtil.percentages(intersections.map(_.ordering))
-    Util.log(s"Road agent: $road_agent")
     Util.log("")
 
     Util.log(s"${agents.size} agents total")
@@ -69,10 +67,6 @@ case class Scenario(
       Util.log(s"Scenarios are for different maps: $map_fn and ${other.map_fn}")
       return
     }
-    ScenarioUtil.diff(road_agent, other.road_agent, "Road Agent") match {
-      case Some(d) => Util.log(d)
-      case None =>
-    }
     intersections.zip(other.intersections).foreach(tupled((i1, i2) => i1.diff(i2)))
     agents.zip(other.agents).foreach(tupled((a1, a2) => a1.diff(a2)))
     if (agents.size != other.agents.size) {
@@ -86,7 +80,6 @@ case class Scenario(
     w.strings(name, map_fn)
     w.lists(agents, intersections)
     w.obj(system_wallet)
-    w.int(road_agent.id)
   }
 }
 
@@ -95,7 +88,7 @@ object Scenario {
     r.string, r.string,
     Range(0, r.int).map(_ => MkAgent.unserialize(r)).toArray,
     Range(0, r.int).map(_ => MkIntersection.unserialize(r)).toArray,
-    SystemWalletConfig.unserialize(r), CongestionType(r.int)
+    SystemWalletConfig.unserialize(r)
   )
 
   def load(fn: String) = unserialize(Util.reader(fn))
@@ -107,8 +100,7 @@ object Scenario {
       map_fn,
       AgentDistribution.default(graph),
       IntersectionDistribution.default(graph),
-      SystemWalletConfig(),
-      CongestionType.withName(cfg.road_agent)
+      SystemWalletConfig()
     )
     // Always save it, so resimulation is easy.
     Util.mkdir("scenarios")
@@ -321,17 +313,6 @@ object WalletType extends Enumeration {
     case Static => new StaticWallet(budget, priority)
     case Freerider => new FreeriderWallet(priority)
     case Fair => new FairWallet(budget, priority, bid_ahead)
-  }
-}
-
-object CongestionType extends Enumeration {
-  type CongestionType = Value
-  val Current, Sticky, MovingWindow = Value
-
-  def make(enum: CongestionType.Value, r: Road, sim: Simulation) = enum match {
-    case Current => new CurrentCongestion(r, sim)
-    case Sticky => new StickyCongestion(r, sim)
-    case MovingWindow => new MovingWindowCongestion(r, sim)
   }
 }
 

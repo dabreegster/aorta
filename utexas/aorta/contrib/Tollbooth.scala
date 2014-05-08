@@ -10,7 +10,6 @@ import utexas.aorta.map.{Road, Turn, Edge}
 import utexas.aorta.sim.{Simulation, EV_Transition}
 import utexas.aorta.sim.intersections.Intersection
 import utexas.aorta.sim.drivers.Agent
-import utexas.aorta.sim.RoadAgent
 
 class IntersectionTollbooth(intersection: Intersection) {
   // [0, ???]

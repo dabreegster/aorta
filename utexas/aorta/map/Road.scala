@@ -9,7 +9,6 @@ import Function.tupled
 
 import utexas.aorta.map.make.MapStateWriter
 import utexas.aorta.ui.Renderable
-import utexas.aorta.sim.RoadAgent
 import utexas.aorta.common.{Util, RoadID, VertexID, Physics, StateReader}
 
 // An oriented bundle of lanes
@@ -32,9 +31,6 @@ class Road(
 
   //////////////////////////////////////////////////////////////////////////////
   // Deterministic state
-
-  // TODO like queues for traversables and intersections for vertices... bad dependency to have.
-  var road_agent: RoadAgent = null
 
   // TODO move this table. actually, store speed limit
   val speed_limit = Physics.mph_to_si(road_type match {
@@ -143,6 +139,10 @@ class Road(
   // TODO better heuristic, based on how much this extended road touches other
   // roads
   def is_major = road_type != "residential"
+
+  // TODO the use of these is deprecated at best
+  def freeflow_percent_full = lanes.map(_.queue.percent_freeflow_full).max
+  def congested = lanes.exists(e => e.queue.is_congested)
 }
 
 object Road {
