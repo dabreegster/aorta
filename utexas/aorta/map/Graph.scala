@@ -10,7 +10,7 @@ import utexas.aorta.map.make.MapStateWriter
 import utexas.aorta.common.{Util, StateReader, VertexID, EdgeID, RoadID}
 
 class Graph(
-  val roads: Array[Road], val edges: Array[Edge], val vertices: Array[Vertex], val zones: ZoneMap,
+  val roads: Array[Road], val edges: Array[Edge], val vertices: Array[Vertex],
   val artifacts: Array[RoadArtifact], val width: Double, val height: Double, val offX: Double,
   val offY: Double, val scale: Double, val name: String
 ) {
@@ -34,7 +34,6 @@ class Graph(
     w.int(vertices.size)
     vertices.foreach(v => v.serialize(w))
     w.string(name)
-    zones.serialize(w)
     w.int(artifacts.size)
     artifacts.foreach(a => a.serialize(w))
   }
@@ -98,9 +97,8 @@ object Graph {
     val edges = Range(0, r.int).map(_ => Edge.unserialize(r, roads)).toArray
     val vertices = Range(0, r.int).map(_ => Vertex.unserialize(r, edges)).toArray
     val name = r.string
-    val zones = ZoneMap.unserialize(r, roads)
     val artifacts = Range(0, r.int).map(_ => RoadArtifact.unserialize(r)).toArray
-    val g = new Graph(roads, edges, vertices, zones, artifacts, w, h, xo, yo, s, name)
+    val g = new Graph(roads, edges, vertices, artifacts, w, h, xo, yo, s, name)
     // Dependency between roads, edges, and vertices is cyclic, so have to set up one of these.
     g.roads.foreach(r => r.setup(vertices))
     return g

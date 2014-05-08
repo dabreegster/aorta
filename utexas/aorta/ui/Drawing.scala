@@ -9,7 +9,7 @@ import java.awt.{Color, BasicStroke, Shape}
 import java.awt.geom.{Line2D, Rectangle2D, Path2D}
 import scala.collection.mutable
 
-import utexas.aorta.map.{Coordinate, Edge, Line, Vertex, Zone, Road, Direction, RoadArtifact, Turn}
+import utexas.aorta.map.{Coordinate, Edge, Line, Vertex, Road, Direction, RoadArtifact, Turn}
 import utexas.aorta.sim.drivers.Agent
 
 import utexas.aorta.common.{cfg, RNG}
@@ -98,18 +98,6 @@ class DrawDriver(val agent: Agent, state: GuiState) {
   }
 }
 
-// TODO tmp way of doing this.
-object ZoneColor {
-  private val rng = new RNG()
-  private val colors = new mutable.HashMap[Zone, Color]()
-  def color(zone: Zone): Color = {
-    if (!colors.contains(zone)) {
-      colors(zone) = new Color(rng.int(0, 255), rng.int(0, 255), rng.int(0, 255))
-    }
-    return colors(zone)
-  }
-}
-
 class DrawRoad(val r: Road, state: GuiState) {
   val edges = r.lanes.map(e => new DrawEdge(e, state))
 
@@ -167,8 +155,6 @@ class DrawRoad(val r: Road, state: GuiState) {
     else
       state.highlight_type match {
         case (Some(x)) if x == r.road_type => Color.GREEN
-        // just show one zone arbitrarily
-        case _ if state.show_zone_colors => ZoneColor.color(state.canvas.sim.graph.zones(r).head)
         case _ => Color.BLACK
       }
 }

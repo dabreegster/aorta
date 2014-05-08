@@ -198,8 +198,6 @@ trait Controls {
     }
     case Key.G => state.show_green = !state.show_green
     case Key.T => state.show_tooltips = !state.show_tooltips
-    case Key.Z => state.show_zone_colors = !state.show_zone_colors
-    case Key.W => state.show_zone_centers = !state.show_zone_centers
     case Key.S => {
       if (!state.running) {
         canvas.step_sim()

@@ -9,7 +9,7 @@ import java.awt.{Graphics2D, Shape, BasicStroke, Color}
 import java.awt.geom.{Rectangle2D, Ellipse2D, Line2D}
 import swing.event.Key
 
-import utexas.aorta.map.{Road, Vertex, Edge, Position, Turn, Coordinate, Zone}
+import utexas.aorta.map.{Road, Vertex, Edge, Position, Turn, Coordinate}
 import utexas.aorta.sim.{Simulation, EV_Signal_Change, EV_Transition, EV_Reroute, EV_Breakpoint,
                          EV_Heartbeat, AgentMap}
 import utexas.aorta.sim.make.IntersectionType
@@ -33,8 +33,6 @@ class GuiState(val canvas: MapCanvas) {
   var polygon_roads2: Set[Road] = Set()
   var chosen_edge1: Option[Edge] = None
   var chosen_edge2: Option[Edge] = None
-  var show_zone_colors = false
-  var show_zone_centers = false
   var running = false
   var speed_cap: Int = 1  // A rate of realtime. 1x is realtime.
   var current_turn = -1  // for cycling through turns from an edge
@@ -60,18 +58,14 @@ class GuiState(val canvas: MapCanvas) {
     val sim = canvas.sim
     val cursor = new Rectangle2D.Double(x - eps, y - eps, eps * 2, eps * 2)
 
-    if (show_zone_centers) {
-      current_obj = sim.graph.zones.zones.find(z => bubble(z.center).intersects(cursor))
-    } else {
-      // TODO ideally, center agent bubble where the vehicle center is drawn.
-      // Order of search: agents, vertices, edges, roads
-      current_obj =
-        canvas.driver_renderers.values.find(_.hits(cursor)).map(_.agent)
-        .orElse(sim.graph.vertices.find(v => bubble(v.location).intersects(cursor)))
-        .orElse(canvas.road_renderers.flatMap(_.edges).find(_.hits(cursor))
-                .map(e => Position(e.edge, e.edge.approx_dist(Coordinate(x, y), 1.0))))
-        .orElse(canvas.road_renderers.find(_.hits(cursor)).map(_.r))
-    }
+    // TODO ideally, center agent bubble where the vehicle center is drawn.
+    // Order of search: agents, vertices, edges, roads
+    current_obj =
+      canvas.driver_renderers.values.find(_.hits(cursor)).map(_.agent)
+      .orElse(sim.graph.vertices.find(v => bubble(v.location).intersects(cursor)))
+      .orElse(canvas.road_renderers.flatMap(_.edges).find(_.hits(cursor))
+              .map(e => Position(e.edge, e.edge.approx_dist(Coordinate(x, y), 1.0))))
+      .orElse(canvas.road_renderers.find(_.hits(cursor)).map(_.r))
   }
 
   // Queries
@@ -247,109 +241,87 @@ class MapCanvas(val sim: Simulation, headless: Boolean = false)
   override def render_canvas(g2d: Graphics2D, window: Rectangle2D.Double): List[Tooltip] = {
     state.reset(g2d)
 
-    if (state.show_zone_centers) {
-      for (zone <- sim.graph.zones.zones) {
-        g2d.setColor(ZoneColor.color(zone))
-        g2d.fill(state.bubble(zone.center))
-        // Draw connections
-        g2d.setColor(Color.BLACK)
-        g2d.setStroke(GeomFactory.center_stroke)
-        for (link <- sim.graph.zones.links(zone)) {
-          g2d.draw(new Line2D.Double(zone.center.x, zone.center.y, link.center.x, link.center.y))
-        }
+    for (a <- artifact_renderers if a.hits(window)) {
+      a.render_road()
+    }
+
+    val roads_seen = road_renderers.filter(r => {
+      val hit = r.hits(window)
+      if (hit) {
+        r.render_road()
       }
+      hit
+    })
+
+    // don't show tiny details when it doesn't matter (and when it's expensive
+    // to render them all)
+    if (zoomed_in) {
+      for (r <- roads_seen) {
+        r.render_edges()
+        r.render_buildings()
+      }
+
       state.current_obj match {
-        case Some(zone: Zone) => {
-          for (r <- zone.roads.map(r => road_lookup(r))) {
-            r.render_road()
+        case Some(pos: Position) => {
+          val e = pos.on.asInstanceOf[Edge]
+          DrawIntersection.draw_turns(state, e)
+          highlight_buildings(g2d, e.road)
+        }
+        case Some(v: Vertex) => {
+          for (t <- v.intersection.policy.current_greens) {
+            DrawIntersection.draw_turn(state, t, cfg.turn_color)
           }
         }
         case _ =>
       }
-      return Nil
-    } else {
-      for (a <- artifact_renderers if a.hits(window)) {
-        a.render_road()
+
+      // Show traffic signal stuff
+      if (state.show_green) {
+        g2d.setStroke(GeomFactory.center_stroke)
+        g2d.setColor(Color.GREEN)
+        green_turns.foreach(t => if (t._2.intersects(window)) {
+          g2d.fill(t._2)
+          // TODO draw the tip too?
+        })
       }
 
-      val roads_seen = road_renderers.filter(r => {
-        val hit = r.hits(window)
-        if (hit) {
-          r.render_road()
+      // Illustrate the intersection policies
+      for (v <- sim.graph.vertices) {
+        val bub = state.bubble(v.location)
+        if (bub.intersects(window)) {
+          g2d.setColor(policy_colors(v.intersection.policy.policy_type))
+          g2d.draw(bub)
         }
-        hit
-      })
+      }
+    }
 
-      // don't show tiny details when it doesn't matter (and when it's expensive
-      // to render them all)
-      if (zoomed_in) {
-        for (r <- roads_seen) {
-          r.render_edges()
-          r.render_buildings()
-        }
+    for (driver <- driver_renderers.values) {
+      if (driver.hits(window)) {
+        driver.render()
+      }
+    }
 
-        state.current_obj match {
-          case Some(pos: Position) => {
-            val e = pos.on.asInstanceOf[Edge]
-            DrawIntersection.draw_turns(state, e)
-            highlight_buildings(g2d, e.road)
-          }
-          case Some(v: Vertex) => {
-            for (t <- v.intersection.policy.current_greens) {
-              DrawIntersection.draw_turn(state, t, cfg.turn_color)
-            }
-          }
+    // Finally, if the user is free-handing a region, show their work.
+    g2d.setColor(cfg.polygon_color)
+    g2d.setStroke(drawing_stroke)
+    g2d.draw(drawing_polygon)
+
+    // What tooltips do we want?
+    state.current_obj match {
+      case Some(thing) => {
+        state.tooltips += Tooltip(
+          screen_to_map_x(mouse_at_x), screen_to_map_y(mouse_at_y),
+          thing.tooltip, false
+        )
+        thing match {
+          // TODO make all the moused over things be renderables with this method
+          case a: Agent => driver_renderers.get(a).moused_over()
           case _ =>
         }
-
-        // Show traffic signal stuff
-        if (state.show_green) {
-          g2d.setStroke(GeomFactory.center_stroke)
-          g2d.setColor(Color.GREEN)
-          green_turns.foreach(t => if (t._2.intersects(window)) {
-            g2d.fill(t._2)
-            // TODO draw the tip too?
-          })
-        }
-
-        // Illustrate the intersection policies
-        for (v <- sim.graph.vertices) {
-          val bub = state.bubble(v.location)
-          if (bub.intersects(window)) {
-            g2d.setColor(policy_colors(v.intersection.policy.policy_type))
-            g2d.draw(bub)
-          }
-        }
       }
-
-      for (driver <- driver_renderers.values) {
-        if (driver.hits(window)) {
-          driver.render()
-        }
-      }
-
-      // Finally, if the user is free-handing a region, show their work.
-      g2d.setColor(cfg.polygon_color)
-      g2d.setStroke(drawing_stroke)
-      g2d.draw(drawing_polygon)
-
-      // What tooltips do we want?
-      state.current_obj match {
-        case Some(thing) => {
-          state.tooltips += Tooltip(
-            screen_to_map_x(mouse_at_x), screen_to_map_y(mouse_at_y),
-            thing.tooltip, false
-          )
-          thing match {
-            // TODO make all the moused over things be renderables with this method
-            case a: Agent => driver_renderers.get(a).moused_over()
-            case _ =>
-          }
-        }
-        case None =>
-      }
-      return state.tooltips.toList
+      case None =>
     }
+    return state.tooltips.toList
   }
 
   def highlight_buildings(g2d: Graphics2D, r: Road) {
