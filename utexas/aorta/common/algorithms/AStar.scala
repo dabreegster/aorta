@@ -18,12 +18,10 @@ case class Pathfind(
   start: Road = null,
   goal: Road = null,
   successors: (Road) => Array[Road] = (step: Road) => step.succs,
-  calc_cost: (Road, Road, (Double, Double)) => (Double, Double) = null,
-  calc_heuristic: (Road) => (Double, Double) = (node: Road) => (0.0, 0.0),
-  add_cost: ((Double, Double), (Double, Double)) => (Double, Double) =
-    (a: (Double, Double), b: (Double, Double)) => (a._1 + b._1, a._2 + b._2),
+  calc_cost: (Road, Road, Double) => Double = null,
+  calc_heuristic: (Road) => Double = (node: Road) => 0.0,
   allow_cycles: Boolean = false,
-  cost_start: (Double, Double) = (0, 0),
+  cost_start: Double = 0.0,
   banned_nodes: Set[Road] = Set[Road](),
   return_costs: Boolean = false
 ) {
@@ -32,7 +30,7 @@ case class Pathfind(
   )
 }
 
-case class PathResult(path: List[Road], costs: Map[Road, (Double, Double)], nodes_visited: Int)
+case class PathResult(path: List[Road], costs: Map[Road, Double], nodes_visited: Int)
 
 class PathfindingFailedException(msg: String) extends Exception(msg)
 
@@ -56,10 +54,9 @@ object AStar {
     // We're finished with these
     val visited = new mutable.HashSet[Road]()
     // Best cost so far
-    val costs = new mutable.HashMap[Road, (Double, Double)]()
+    val costs = new mutable.HashMap[Road, Double]()
 
     val open = new JavaPriorityQueue()
-    val ordering_tuple = Ordering[(Double, Double)].on((pair: (Double, Double)) => pair)
 
     costs(spec.start) = spec.cost_start
     open.insert(spec.start, spec.calc_heuristic(spec.start))
@@ -85,7 +82,7 @@ object AStar {
         if (spec.return_costs) {
           return PathResult(path.toList, costs.toMap, visited.size)
         } else {
-          return PathResult(path.toList, Map[Road, (Double, Double)](), visited.size)
+          return PathResult(path.toList, Map[Road, Double](), visited.size)
         }
       } else {
         // This foreach manually rewritten as a while to avoid closures in a tight loop.
@@ -95,15 +92,13 @@ object AStar {
           val next_state = succs(i)
           i += 1
           if (!spec.banned_nodes.contains(next_state) && !visited.contains(next_state)) {
-            val tentative_cost = spec.add_cost(
-              costs(current), spec.calc_cost(current, next_state, costs(current))
-            )
-            if (!open.contains(next_state) || ordering_tuple.lt(tentative_cost, costs(next_state))) {
+            val tentative_cost = costs(current) + spec.calc_cost(current, next_state, costs(current))
+            if (!open.contains(next_state) || tentative_cost < costs(next_state)) {
               backrefs(next_state) = current
               costs(next_state) = tentative_cost
               // if they're in open_members, modify weight in the queue? or
               // new step will clobber it. fine.
-              open.insert(next_state, spec.add_cost(tentative_cost, spec.calc_heuristic(next_state)))
+              open.insert(next_state, tentative_cost + spec.calc_heuristic(next_state))
             }
           }
         }
@@ -115,7 +110,7 @@ object AStar {
 }
 
 abstract class PriorityQueue() {
-  def insert(item: Road, weight: (Double, Double))
+  def insert(item: Road, weight: Double)
   def shift(): Road
   def contains(item: Road): Boolean
   def nonEmpty(): Boolean
@@ -125,14 +120,14 @@ abstract class PriorityQueue() {
 
 // TODO generalize score.
 class ScalaPriorityQueue() extends PriorityQueue {
-  private case class Item(item: Road, weight: (Double, Double))
+  private case class Item(item: Road, weight: Double)
 
   private val pq = new mutable.PriorityQueue[Item]()(
-    Ordering[(Double, Double)].on((item: Item) => item.weight).reverse
+    Ordering[Double].on((item: Item) => item.weight).reverse
   )
   private val members = new mutable.HashSet[Road]()
 
-  override def insert(item: Road, weight: (Double, Double)) {
+  override def insert(item: Road, weight: Double) {
     pq.enqueue(Item(item, weight))
     members += item
   }
@@ -148,25 +143,21 @@ class ScalaPriorityQueue() extends PriorityQueue {
 }
 
 class JavaPriorityQueue() extends PriorityQueue {
-  private case class Item(item: Road, weight_1: Double, weight_2: Double)
+  private case class Item(item: Road, weight: Double)
 
   private val pq = new util.PriorityQueue[Item](100, new util.Comparator[Item]() {
     override def compare(a: Item, b: Item) =
-      if (a.weight_1 < b.weight_1)
+      if (a.weight < b.weight)
         -1
-      else if (a.weight_1 > b.weight_1)
-        1
-      else if (a.weight_2 < b.weight_2)
-        -1
-      else if (a.weight_2 > b.weight_2)
+      else if (a.weight > b.weight)
         1
       else
         0
   })
   private val members = new mutable.HashSet[Road]()
 
-  override def insert(item: Road, weight: (Double, Double)) {
-    pq.add(Item(item, weight._1, weight._2))
+  override def insert(item: Road, weight: Double) {
+    pq.add(Item(item, weight))
     members += item
   }
 

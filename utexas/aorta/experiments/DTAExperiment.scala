@@ -4,7 +4,7 @@
 
 package utexas.aorta.experiments
 
-import utexas.aorta.map.{Graph, Road, AbstractPairAstarRouter, SimpleHeuristic, Turn, Edge}
+import utexas.aorta.map.{Graph, Road, AbstractAstarRouter, SimpleHeuristic, Turn, Edge}
 import utexas.aorta.sim.{EV_AgentSpawned, EV_Transition}
 import utexas.aorta.sim.drivers.Agent
 import utexas.aorta.sim.make.{Scenario, RouterType}
@@ -71,13 +71,12 @@ class DTAExperiment(config: ExpConfig) extends SmartExperiment(config, "dta") {
 }
 
 class TimeDependentAStar(graph: Graph, delays: LinkDelayMetric, start_time: Double)
-  extends AbstractPairAstarRouter(graph) with SimpleHeuristic
+  extends AbstractAstarRouter(graph) with SimpleHeuristic
 {
   override def router_type = RouterType.Unusable
   override def transform(spec: Pathfind) = super.transform(spec).copy(
-    calc_cost = (prev: Road, next: Road, cost_sofar: (Double, Double)) =>
-      // cost_sofar._2 is the time spent in the route so far
-      (Util.bool2binary(next.road_agent.congested), delays.delay(next, start_time + cost_sofar._2))
+    calc_cost = (prev: Road, next: Road, cost_sofar: Double) =>
+      delays.delay(next, start_time + cost_sofar)
   )
 }
 

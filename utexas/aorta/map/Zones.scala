@@ -122,8 +122,8 @@ object ZoneMap {
       // TODO path now includes start step 'base'. relevant?
       val path = AStar.path(Pathfind(
         start = base, goal = base,
-        calc_cost = (_: Road, next: Road, _: (Double, Double)) => (next.freeflow_time, 0),
-        calc_heuristic = (state: Road) => (state.end_pt.dist_to(base.end_pt), 0),
+        calc_cost = (_: Road, next: Road, _: Double) => next.freeflow_time,
+        calc_heuristic = (state: Road) => state.end_pt.dist_to(base.end_pt),
         allow_cycles = true
       )).path
       val new_zone = new mutable.HashSet[Road]()

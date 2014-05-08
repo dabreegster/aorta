@@ -72,7 +72,7 @@ trait Visualization {
 
   // Hardcoded to show first component of 2-tuple cost
   def show_path_costs(result: PathResult, percentile: Double = .99) {
-    show_heatmap(result.costs.mapValues(_._1), percentile, "path costs")
+    show_heatmap(result.costs, percentile, "path costs")
     for (r <- result.path) {
       state.road_colors.set("path costs", r, Color.GREEN)
     }

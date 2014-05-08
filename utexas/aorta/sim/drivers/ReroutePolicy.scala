@@ -67,8 +67,8 @@ class RegularlyReroutePolicy(a: Agent) extends ReroutePolicy(a) {
     val router = new TollboothRouter(a.sim.graph)
     router.setup(a)
     val cost_fxn = router.transform(Pathfind()).calc_cost
-    val old_cost = old_path.zip(old_path.tail).map(pair => cost_fxn(pair._1, pair._2, (0, 0))._1).sum
-    val new_cost = new_path.zip(old_path.tail).map(pair => cost_fxn(pair._1, pair._2, (0, 0))._1).sum
+    val old_cost = old_path.zip(old_path.tail).map(pair => cost_fxn(pair._1, pair._2, 0)).sum
+    val new_cost = new_path.zip(old_path.tail).map(pair => cost_fxn(pair._1, pair._2, 0)).sum
 
     // Lower is better, less cost per old cost
     val ratio = new_cost / old_cost

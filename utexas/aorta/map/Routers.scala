@@ -35,28 +35,27 @@ class FixedRouter(graph: Graph, initial_path: List[Road]) extends Router(graph) 
   }
 }
 
-// Score is a pair of doubles
-abstract class AbstractPairAstarRouter(graph: Graph) extends Router(graph) {
+abstract class AbstractAstarRouter(graph: Graph) extends Router(graph) {
   override def path(spec: Pathfind) = AStar.path(transform(spec))
 
   protected def transform(spec: Pathfind) = spec
 }
 
-// No guess for cost, straight-line distance at 1m/s for freeflow time
-trait SimpleHeuristic extends AbstractPairAstarRouter {
+// straight-line distance at 1m/s for freeflow time
+trait SimpleHeuristic extends AbstractAstarRouter {
   private val max_speed = Physics.mph_to_si(80.0)  // TODO put in cfg
   override def transform(spec: Pathfind) = super.transform(spec).copy(
-    calc_heuristic = (state: Road) => (0.0, state.end_pt.dist_to(spec.goal.end_pt) / max_speed)
+    calc_heuristic = (state: Road) => state.end_pt.dist_to(spec.goal.end_pt) / max_speed
   )
   // Alternate heuristics explore MUCH less states, but the oracles are too
   // pricy. (CH, Dijkstra table of distances)
   // TODO make a fast mode that doesnt divide by speed limit. Suboptimal paths.
 }
 
-class FreeflowRouter(graph: Graph) extends AbstractPairAstarRouter(graph) with SimpleHeuristic {
+class FreeflowRouter(graph: Graph) extends AbstractAstarRouter(graph) with SimpleHeuristic {
   override def router_type = RouterType.Unusable
   override def transform(spec: Pathfind) = super.transform(spec).copy(
-    calc_cost = (prev: Road, next: Road, cost_sofar: (Double, Double)) => (0, next.freeflow_time)
+    calc_cost = (prev: Road, next: Road, cost_sofar: Double) => next.freeflow_time
   )
 }
 
@@ -64,7 +63,7 @@ object TollboothRouter {
   var toll_weight = 0.1
 }
 
-class TollboothRouter(graph: Graph) extends AbstractPairAstarRouter(graph) {
+class TollboothRouter(graph: Graph) extends AbstractAstarRouter(graph) {
   // TODO cache this among drivers!
   private val max_actual_time = graph.roads.map(_.freeflow_time).max
 
@@ -76,19 +75,19 @@ class TollboothRouter(graph: Graph) extends AbstractPairAstarRouter(graph) {
 
   // Score is (utility, 0)
   override def transform(spec: Pathfind) = super.transform(spec).copy(
-    calc_cost = (prev: Road, next: Road, cost_sofar: (Double, Double)) => {
+    calc_cost = (prev: Road, next: Road, cost_sofar: Double) => {
       // Utility = 0.1 * (1 - priority) * price + priority * time
       // Deterministically choose the first turn that fits
       val turn = prev.to.turns.find(t => t.from.road == prev && t.to.road == next).get
       val price = prev.to.intersection.tollbooth.toll(turn)   // not gonna normalize
       val time = next.freeflow_time / max_actual_time
       val priority = owner.wallet.priority
-      (TollboothRouter.toll_weight * (1 - priority) * price + priority * time, 0)
+      TollboothRouter.toll_weight * (1 - priority) * price + priority * time
     }
   )
 }
 
-class LatestEstimateRouter(graph: Graph) extends AbstractPairAstarRouter(graph) {
+class LatestEstimateRouter(graph: Graph) extends AbstractAstarRouter(graph) {
   private var owner: Agent = null
   override def router_type = RouterType.LatestEstimate
   override def setup(a: Agent) {
@@ -96,7 +95,6 @@ class LatestEstimateRouter(graph: Graph) extends AbstractPairAstarRouter(graph) 
   }
 
   override def transform(spec: Pathfind) = super.transform(spec).copy(
-    calc_cost = (prev: Road, next: Road, cost_sofar: (Double, Double)) =>
-      (owner.sim.latest_delays.delay(next), 0)
+    calc_cost = (prev: Road, next: Road, cost_sofar: Double) => owner.sim.latest_delays.delay(next)
   )
 }
