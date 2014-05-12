@@ -33,6 +33,8 @@ class Simulation(val scenario: Scenario) extends Publisher with AgentManager {
   // this represents total "real seconds"
   var tick: Double = 0
 
+  val agent_maps = new mutable.MutableList[AgentMap[_ <: Any]]()
+
   // Track this for stats.
   private var last_real_time = 0.0
   private var steps_since_last_time = 0
@@ -281,9 +283,9 @@ trait AgentManager {
 
 // A map from agent to something else, which supports defaults and knows when
 // agents are created or destroyed.
-class AgentMap[T](default: T) {
+class AgentMap[T](default: T, sim: Simulation) {
   private val mapping = new mutable.HashMap[AgentID, T]()
-  AgentMap.maps += this
+  sim.agent_maps += this
 
   def get(id: AgentID): T = mapping.getOrElse(id, default)
   def get(a: Agent): T = get(a.id)
@@ -301,8 +303,4 @@ class AgentMap[T](default: T) {
   def create_from_existing(sim: Simulation) {
     sim.agents.foreach(a => when_created(a))
   }
-}
-
-object AgentMap {
-  val maps = new mutable.MutableList[AgentMap[_ <: Any]]()
 }

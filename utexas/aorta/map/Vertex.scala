@@ -76,8 +76,8 @@ class Vertex(val location: Coordinate, val id: VertexID) extends Renderable {
     Util.log_push
     i.policy.current_greens.foreach(g => Util.log("" + g))
     Util.log_pop
-                                                                        
-    Util.log("Current turns active:")                                   
+
+    Util.log("Current turns active:")
     Util.log_push
     i.turns.foreach(tupled((turn, count) => Util.log(s"$count doing $turn")))
     Util.log_pop

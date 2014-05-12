@@ -13,7 +13,7 @@ import utexas.aorta.common.{Util, cfg, StateWriter, StateReader, TurnID, Seriali
 class Ticket(val a: Agent, val turn: Turn) extends Ordered[Ticket] with Serializable {
   //////////////////////////////////////////////////////////////////////////////
   // State
-  
+
   // This one is fixed, but unserialization has to set it.
   private var req_tick = a.sim.tick
   // Don't initially know these

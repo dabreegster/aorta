@@ -7,7 +7,7 @@ package utexas.aorta.sim.drivers
 import scala.collection.mutable
 
 import utexas.aorta.map.{Edge, Coordinate, Turn, Traversable, Graph, Position, Vertex}
-import utexas.aorta.sim.{Simulation, EV_AgentQuit, AgentMap, EV_Breakpoint}
+import utexas.aorta.sim.{Simulation, EV_AgentQuit, EV_Breakpoint}
 import utexas.aorta.sim.intersections.{Intersection, Ticket}
 import utexas.aorta.ui.Renderable
 
@@ -50,7 +50,7 @@ class Agent(
     at = spawn.queue.enter(this, dist)
     spawn.queue.allocate_slot()
     sim.insert_agent(this)
-    AgentMap.maps.foreach(m => m.when_created(this))
+    sim.agent_maps.foreach(m => m.when_created(this))
     set_debug(Flags.int("--track", -1) == id.int)
     // Try to do this after most of our state has been set up
     wallet.setup(this)
@@ -208,7 +208,7 @@ class Agent(
       this, maker.birth_tick, sim.graph.get_r(maker.start), route.goal, wallet.wallet_type,
       maker.wallet.budget, sim.tick, wallet.budget, wallet.priority
     ))
-    AgentMap.maps.foreach(m => m.destroy(this))
+    sim.agent_maps.foreach(m => m.destroy(this))
   }
 
   def set_debug(value: Boolean) {

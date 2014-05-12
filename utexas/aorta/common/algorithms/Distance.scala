@@ -19,7 +19,7 @@ object Distance {
     val dLat = lat2 - lat1
     val dLon = lon2 - lon1
     val a = math.pow(math.sin(dLat / 2), 2) +
-    	      math.pow(math.sin(dLon / 2), 2) * math.cos(lat1) * math.cos(lat2)
+            math.pow(math.sin(dLon / 2), 2) * math.cos(lat1) * math.cos(lat2)
     val c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return earth_radius * c
   }

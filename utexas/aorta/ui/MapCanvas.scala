@@ -90,7 +90,7 @@ class MapCanvas(val sim: Simulation, headless: Boolean = false)
   // State
   private val state = new GuiState(this)
 
-  val driver_renderers = new AgentMap[DrawDriver](null) {
+  val driver_renderers = new AgentMap[DrawDriver](null, sim) {
     override def when_created(a: Agent) {
       put(a.id, new DrawDriver(a, state))
     }

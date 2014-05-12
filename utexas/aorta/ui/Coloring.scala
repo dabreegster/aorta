@@ -9,7 +9,6 @@ import java.awt.Color
 import scala.collection.mutable
 
 import utexas.aorta.map.{Vertex, Road}
-import utexas.aorta.sim.AgentMap
 
 import utexas.aorta.common.{cfg, AgentID}
 
@@ -66,7 +65,7 @@ object DriverColorScheme {
 
 // Reveal who's acting differently from their past life
 // TODO disable sometimes. also, revive this?
-object ReplayDiffScheme {
+/*object ReplayDiffScheme {
   private val deltas = new AgentMap[Double](0.0)
 
   def add_delta(id: AgentID, delta: Double) {
@@ -81,7 +80,7 @@ object ReplayDiffScheme {
       case x if x < 0.0 => Color.RED
       case _ => Color.GREEN
     }
-}
+}*/
 
 object AccelerationScheme {
   var enabled = false

@@ -214,7 +214,7 @@ object Phase {
       pair._1.toList ++ pair._2.toList
     })
   }
-  
+
   // Assign the same arbitrary duration to everything
   private def turn_groups_to_phases(groups: List[Set[Turn]]) =
     // TODO duration has to let agents have time to cross the intersection at a

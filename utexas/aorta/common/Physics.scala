@@ -54,7 +54,7 @@ object Physics {
     dist_at_constant_accel(-cfg.max_accel, cfg.dt_s, speed)
   def min_next_dist_plus_stopping(speed: Double) =
     min_next_dist(speed) + stopping_distance(min_next_speed(speed))
-  
+
   def accel_to_achieve(target_speed: Double, speed: Double) =
     (target_speed - speed) / cfg.dt_s
 

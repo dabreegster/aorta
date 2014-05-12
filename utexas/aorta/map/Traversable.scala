@@ -201,7 +201,7 @@ case class Position(on: Traversable, dist: Double) extends Renderable with Seria
   def dist_left = on.length - dist
   override def toString = s"($on, $dist)"
   override def tooltip = List(f"$on at $dist%.2f")
-  
+
   def debug = {
     Util.log(toString)
     on match {
