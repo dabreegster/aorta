@@ -34,7 +34,7 @@ class StopSignPolicy(vertex: Vertex, ordering: IntersectionOrdering[Ticket]) ext
   private def approve_next() {
     ordering.choose(candidates, request_queue, this) match {
       case Some(ticket) => {
-        ticket.a.sim.publish(EV_IntersectionOutcome(
+        sim.publish(EV_IntersectionOutcome(
           policy_type, request_queue.filter(t => t.turn.from != ticket.turn.from).toList
         ))
         accept(ticket)

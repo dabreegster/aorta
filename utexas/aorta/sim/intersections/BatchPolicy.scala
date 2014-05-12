@@ -12,7 +12,7 @@ import utexas.aorta.common.cfg
 
 // Ignore ordering. Batch people if they're reasonably close, choose the batch based on proximity to
 // intersection, and have some timeout.
-class BatchPolicy(vertex: Vertex, sim: Simulation) extends Policy(vertex) {
+class BatchPolicy(vertex: Vertex) extends Policy(vertex) {
   // TODO serialization
 
   private def candidates = request_queue.filter(ticket => !ticket.turn_blocked)

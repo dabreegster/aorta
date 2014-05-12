@@ -212,7 +212,7 @@ case class MkIntersection(id: VertexID, policy: IntersectionType.Value,
                           ordering: OrderingType.Value) extends Serializable
 {
   def make(v: Vertex, sim: Simulation) = new Intersection(
-    v, IntersectionType.make(v, policy, ordering, sim)
+    v, IntersectionType.make(v, policy, ordering, sim), sim
   )
 
   def diff(other: MkIntersection) {
@@ -273,11 +273,11 @@ object IntersectionType extends Enumeration {
   {
     case NeverGo => new NeverGoPolicy(v)
     case StopSign => new StopSignPolicy(v, OrderingType.make[Ticket](ordering))
-    case Signal => new SignalPolicy(v, OrderingType.make[Phase](ordering), sim)
+    case Signal => new SignalPolicy(v, OrderingType.make[Phase](ordering))
     case Reservation => new ReservationPolicy(v, OrderingType.make[Ticket](ordering))
     case Yield => new YieldPolicy(v, OrderingType.make[Ticket](ordering))
     case AIM => new AIMPolicy(v, OrderingType.make[Ticket](ordering))
-    case Batch => new BatchPolicy(v, sim)
+    case Batch => new BatchPolicy(v)
   }
 }
 

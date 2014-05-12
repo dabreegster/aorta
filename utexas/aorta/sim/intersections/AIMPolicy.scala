@@ -38,7 +38,7 @@ class AIMPolicy(vertex: Vertex, ordering: IntersectionOrdering[Ticket])
     // See if there's a predicted conflict with any agent that's been accepted
     for (t <- accepted if t.turn.conflicts_with(ticket.turn)) {
       // Factor in slack. These times are the earliest possible.
-      val our_time = ticket.a.sim.tick + conflict_map(t.turn)(ticket.turn).time(ticket.turn, 0)
+      val our_time = sim.tick + conflict_map(t.turn)(ticket.turn).time(ticket.turn, 0)
       val their_time = t.accept_tick + conflict_map(t.turn)(ticket.turn).time(t.turn, 0)
       val range1 = our_time to our_time + slack by cfg.dt_s
       val range2 = their_time to their_time + slack by cfg.dt_s
@@ -77,7 +77,7 @@ class AIMPolicy(vertex: Vertex, ordering: IntersectionOrdering[Ticket])
         val old_dist2: Double = dist_last_tick.getOrElse(t2.a, 0)
         val old_delta2 = old_dist2 - conflict.dist(t2.turn)
         if ((old_delta1 < 0 && delta1 > 0) && (old_delta2 < 0 && delta2 > 0)) {
-          throw new Exception(s"${t1.a} and ${t2.a} crossed at an AIM intersection at ${t1.a.sim.tick}!")
+          throw new Exception(s"${t1.a} and ${t2.a} crossed at an AIM intersection at ${sim.tick}!")
         }
       }
 
@@ -97,7 +97,7 @@ class AIMPolicy(vertex: Vertex, ordering: IntersectionOrdering[Ticket])
     exited_this_tick += t
     // We want to run end_step the tick agents leave, even if none are left in the intersection,
     // since there's a case where exiting agents collide.
-    t.a.sim.active_intersections += intersection
+    sim.active_intersections += intersection
 
     // Also check that our slack value is sufficient.
     val projected = Physics.simulate_steps(t.turn.length + cfg.end_threshold, 0, t.turn.speed_limit)

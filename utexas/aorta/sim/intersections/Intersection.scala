@@ -15,7 +15,7 @@ import utexas.aorta.common.{Util, StateWriter, StateReader, TurnID, Serializable
                             Price}
 
 // Reason about collisions from conflicting simultaneous turns.
-class Intersection(val v: Vertex, val policy: Policy) {
+class Intersection(val v: Vertex, val policy: Policy, val sim: Simulation) {
   //val tollbooth = new IntersectionTollbooth(this)
   val tollbooth = new PerFlowIntersectionTollbooth(this)
 
@@ -50,7 +50,7 @@ class Intersection(val v: Vertex, val policy: Policy) {
       // It's not really that much better to do the checking in-place and only
       // atomic-check when there could be a problem.
       if (turns.size == 1) {
-        ticket.a.sim.active_intersections += this
+        sim.active_intersections += this
       }
 
       turns(t) = 0
@@ -61,12 +61,12 @@ class Intersection(val v: Vertex, val policy: Policy) {
       // code hasn't finished moving them.
       Util.log(s"!!! ${ticket.a} illegally entered $this, going ${ticket.a.speed} m/s")
       Util.log("  Illegal entry was near " + t.from + " and " + t + " (vert " + t.from.to.id + ")")
-      Util.log("  Origin lane length: " + t.from.length + "; time " + ticket.a.sim.tick)
+      Util.log("  Origin lane length: " + t.from.length + "; time " + sim.tick)
       ticket.a.debug()
       policy.dump_info()
       throw new Exception("Driver entered intersection without accepted ticket")
     }
-    ticket.a.sim.publish(EV_TurnStarted(ticket))
+    sim.publish(EV_TurnStarted(ticket))
   }
 
   def exit(ticket: Ticket) {
@@ -76,7 +76,7 @@ class Intersection(val v: Vertex, val policy: Policy) {
       turns -= t
       // Potentially we now don't care...
       if (turns.size == 1) {
-        ticket.a.sim.active_intersections -= this
+        sim.active_intersections -= this
       }
     }
     policy.handle_exit(ticket)
@@ -159,7 +159,7 @@ abstract class Policy(vertex: Vertex) extends Serializable with BatchDuringStep[
     ticket.approve()
     accepted += ticket
     unqueue(ticket)
-    ticket.a.sim.publish(EV_TurnApproved(ticket))
+    sim.publish(EV_TurnApproved(ticket))
   }
 
   protected def unqueue(ticket: Ticket) {
@@ -199,6 +199,7 @@ abstract class Policy(vertex: Vertex) extends Serializable with BatchDuringStep[
   def policy_type(): IntersectionType.Value
 
   def intersection = vertex.intersection
+  def sim = intersection.sim
 
   def dump_info() {
     Util.log(s"$intersection is a $policy_type")

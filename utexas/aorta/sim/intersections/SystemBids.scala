@@ -21,17 +21,13 @@ class SystemWallet() extends Wallet(0, 0) {
 }
 
 // Bids to maintain "fairness."
-object SystemWallets {
-  // TODO this singleton is a prime example of why multiple simulations per process dont work well
-  // with the scala singleton pattern.
-
+class SystemWallets(rates: SystemWalletConfig) {
   // Keep these separate just for book-keeping
   val thruput = new SystemWallet()
   val capacity = new SystemWallet()
   val dependency = new SystemWallet()
   val waiting = new SystemWallet()
   val ready = new SystemWallet()
-  var rates: SystemWalletConfig = null  // TODO hackish, but then, this whole singleton is.
 
   def meta_bid[T](items: List[T], policy: Policy): List[Bid[T]] =
     (bid_thruput(items, policy) ++ bid_pointless_impatience(items, policy) ++

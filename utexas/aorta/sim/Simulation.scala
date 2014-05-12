@@ -33,7 +33,9 @@ class Simulation(val scenario: Scenario) extends Publisher with AgentManager {
   // this represents total "real seconds"
   var tick: Double = 0
 
+  // singleton-like things per sim
   val agent_maps = new mutable.MutableList[AgentMap[_ <: Any]]()
+  val system_wallets = new SystemWallets(scenario.system_wallet)
 
   // Track this for stats.
   private var last_real_time = 0.0
@@ -51,8 +53,6 @@ class Simulation(val scenario: Scenario) extends Publisher with AgentManager {
   // Meta
 
   def setup(): Simulation = {
-    SystemWallets.rates = scenario.system_wallet
-
     // TODO always do this, and forget this map/sim separation?
     graph.traversables.foreach(t => t.queue = new Queue(t))
     graph.vertices.foreach(v => v.intersection = scenario.make_intersection(v, this))

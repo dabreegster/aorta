@@ -15,10 +15,7 @@ import utexas.aorta.sim.make.{IntersectionType, OrderingType}
 import utexas.aorta.common.{Util, cfg, StateWriter, StateReader}
 
 // A phase-based light.
-class SignalPolicy(
-  vertex: Vertex, ordering: IntersectionOrdering[Phase], sim: Simulation
-) extends Policy(vertex)
-{
+class SignalPolicy(vertex: Vertex, ordering: IntersectionOrdering[Phase]) extends Policy(vertex) {
   //////////////////////////////////////////////////////////////////////////////
   // State
 
@@ -29,7 +26,7 @@ class SignalPolicy(
   phase_order = phase_order.tail ++ List(current_phase)
 
   // Tracks when the current phase began
-  private var started_at = sim.tick
+  private var started_at = 0.0
 
   // TODO maybe get rid of this after I'm done improving it
   private var overtime_total = 0.0

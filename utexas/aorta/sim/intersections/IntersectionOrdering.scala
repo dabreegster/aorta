@@ -58,7 +58,7 @@ class AuctionOrdering[T <: Ordered[T]]() extends IntersectionOrdering[T]() {
     })
     // Ask the System, too, interpreting responses as multipliers to existing
     // bids
-    for (bid <- SystemWallets.meta_bid(choices.toList, client) if bid.amount > 0) {
+    for (bid <- client.sim.system_wallets.meta_bid(choices.toList, client) if bid.amount > 0) {
       multipliers(bid.item) *= bid.amount
       // and implicitly add 1 unit of currency to the user bid, so the system
       // can help freeriders.
