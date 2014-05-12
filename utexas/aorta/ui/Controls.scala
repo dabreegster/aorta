@@ -64,7 +64,7 @@ trait Controls {
       // TODO move toggle method to state
       if (state.running) {
         state.running = false
-        StatusBar.sim_speed.text = s"Paused / ${state.speed_cap}"
+        canvas.statusbar.sim_speed.text = s"Paused / ${state.speed_cap}"
       } else {
         state.running = true
       }

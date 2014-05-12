@@ -151,7 +151,8 @@ abstract class ScrollingCanvas extends Component {
 
       fix_oob()
       // show the zoom
-      StatusBar.zoom.text = f"$zoom%.1f"
+      // TODO aargh
+      this.asInstanceOf[MapCanvas].statusbar.zoom.text = f"$zoom%.1f"
       repaint()
     }
 

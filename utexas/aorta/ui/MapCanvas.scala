@@ -90,6 +90,8 @@ class MapCanvas(val sim: Simulation, headless: Boolean = false)
   // State
   private val state = new GuiState(this)
 
+  val statusbar = new StatusBar()
+
   val driver_renderers = new AgentMap[DrawDriver](null, sim) {
     override def when_created(a: Agent) {
       put(a.id, new DrawDriver(a, state))
@@ -127,8 +129,8 @@ class MapCanvas(val sim: Simulation, headless: Boolean = false)
 
   sim.listen(classOf[EV_Heartbeat], _ match { case e: EV_Heartbeat => {
     update_status()
-    StatusBar.agents.text = e.describe
-    StatusBar.time.text = Util.time_num(e.tick)
+    statusbar.agents.text = e.describe
+    statusbar.time.text = Util.time_num(e.tick)
     last_tick = e.tick
   }})
   sim.listen(classOf[EV_Breakpoint], _ match { case EV_Breakpoint(a) => {
@@ -235,7 +237,7 @@ class MapCanvas(val sim: Simulation, headless: Boolean = false)
   }
 
   def update_status() {
-    StatusBar.sim_speed.text = "%dx / %dx".format((sim.tick - last_tick).toInt, state.speed_cap)
+    statusbar.sim_speed.text = "%dx / %dx".format((sim.tick - last_tick).toInt, state.speed_cap)
   }
 
   override def render_canvas(g2d: Graphics2D, window: Rectangle2D.Double): List[Tooltip] = {

@@ -14,7 +14,7 @@ import utexas.aorta.sim.{Simulation, EV_Heartbeat}
 import utexas.aorta.analysis.SimREPL
 import utexas.aorta.common.{Util, cfg}
 
-object StatusBar {
+class StatusBar() {
   val zoom       = new Label("1.0") // TODO from cfg
   val agents     = new Label("0 moved / 0 live / 0 ready")
   val time       = new Label("0.0")
@@ -46,13 +46,13 @@ object StatusBar {
     c.ipadx = 50
     c.gridx = 0
     c.gridy = 1
-    layout(StatusBar.zoom) = c
+    layout(zoom) = c
     c.gridx = 1
-    layout(StatusBar.agents) = c
+    layout(agents) = c
     c.gridx = 2
-    layout(StatusBar.time) = c
+    layout(time) = c
     c.gridx = 3
-    layout(StatusBar.sim_speed) = c
+    layout(sim_speed) = c
   }
 }
 
@@ -186,7 +186,7 @@ object GUI extends SimpleSwingApplication {
       background = Color.LIGHT_GRAY
       border = Swing.MatteBorder(2, 2, 2, 2, Color.RED)
 
-      add(StatusBar.panel, BorderPanel.Position.North)
+      add(primary_canvas_2d.statusbar.panel, BorderPanel.Position.North)
       add(primary_canvas_2d, BorderPanel.Position.Center)
     }
 
