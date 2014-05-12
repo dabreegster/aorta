@@ -135,6 +135,7 @@ class Agent(
           // To register for a toll, pick our ideal lane, and the ideal turn from that lane.
           // It may not end up being true that we take that ideal turn.
           if (!route.done(e)) {
+            // TODO try to avoid this usage of pick_turn...
             // pick_turn has side-effects, so we try our best to avoid those.
             val next_turn = route.pick_turn(route.pick_final_lane(e)._1, query_only = true)
             e.road.to.intersection.tollbooth.enter(this, next_turn)

@@ -232,7 +232,7 @@ class LookaheadBehavior(a: Agent, route: Route) extends Behavior(a) {
   private def manage_turn(e: Edge) {
     // Schedule a new turn?
     if (!a.get_ticket(e).isDefined && committed_to_lane(e)) {
-      val ticket = new Ticket(a, route.pick_turn(e))
+      val ticket = new Ticket(a, route.reroute_policy.pick_next_turn(e))
       a.add_ticket(ticket)
       e.to.intersection.request_turn(ticket)
     }

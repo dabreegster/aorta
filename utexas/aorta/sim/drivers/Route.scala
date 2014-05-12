@@ -133,6 +133,7 @@ class PathRoute(
     owner.sim.publish(EV_Transition(owner, from, to), owner)
   }
 
+  // TODO TODO TODO be totally query, call mandatory_reroute in the one place...
   def pick_turn(e: Edge, query_only: Boolean): Turn = {
     // Lookahead could be calling us from anywhere. Figure out where we are in the path.
     val (before, slice) = path.span(r => r != e.road)
@@ -141,16 +142,9 @@ class PathRoute(
 
     // Is the next step reachable?
     val must_reroute = e.next_turns.filter(t => t.to.road == dest).isEmpty
-    // This variant only considers long roads capable of being congested, which is risky...
-    // TODO make the client do this? yes! remove policy from mechanism.
-    val should_reroute = dest.congested
 
-    val turn = if (!query_only && (must_reroute || should_reroute)) {
-      if (must_reroute) {
-        mandatory_reroute(e, before)
-      } else {
-        optional_reroute(e)
-      }
+    val turn = if (!query_only && must_reroute) {
+      mandatory_reroute(e, before)
 
       val (_, rerouted_slice) = path.span(r => r != e.road)
       best_turn(e, rerouted_slice.tail.head, rerouted_slice.tail.tail.headOption.getOrElse(null))

@@ -54,6 +54,14 @@ abstract class ReroutePolicy(a: Agent) {
     } else {
       ticket.turn
     }
+
+  def pick_next_turn(e: Edge): Turn = {
+    val next_road = a.route.current_path.span(r => r != e.road)._2.tail.head
+    if (next_road.congested) {
+      a.route.optional_reroute(e)
+    }
+    return a.route.pick_turn(e)
+  }
 }
 
 class NeverReroutePolicy(a: Agent) extends ReroutePolicy(a)
