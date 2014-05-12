@@ -27,8 +27,9 @@ class TuneTolls(config: ExpConfig) extends SmartExperiment(config, "tune_tolls")
     results += run_trial(ScenarioPresets.transform(scenario, "milo_gps"), "baseline")
 
     for (weight <- toll_weights) {
-      TollboothRouter.toll_weight = weight
-      results += run_trial(ScenarioPresets.transform(scenario, "milo_milo"), s"tolls_$weight")
+      val base = ScenarioPresets.transform(scenario, "milo_milo")
+      val s = base.copy(sim_config = base.sim_config.copy(tollbooth_weight = weight))
+      results += run_trial(s, s"tolls_$weight")
     }
 
     output_data(results.toList)

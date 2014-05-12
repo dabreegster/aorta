@@ -35,7 +35,7 @@ class Simulation(val scenario: Scenario) extends Publisher with AgentManager {
 
   // singleton-like things per sim
   val agent_maps = new mutable.MutableList[AgentMap[_ <: Any]]()
-  val system_wallets = new SystemWallets(scenario.system_wallet)
+  val system_wallets = new SystemWallets(scenario.sim_config.system_wallet)
 
   // Track this for stats.
   private var last_real_time = 0.0

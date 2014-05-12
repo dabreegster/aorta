@@ -18,7 +18,7 @@ import utexas.aorta.common.{Util, StateWriter, StateReader, AgentID, VertexID, R
 // Array index and agent/intersection ID must correspond. Creator's responsibility.
 case class Scenario(
   name: String, map_fn: String, agents: Array[MkAgent], intersections: Array[MkIntersection],
-  system_wallet: SystemWalletConfig
+  sim_config: SimConfig
 ) extends Serializable {
   def graph = Graph.load(map_fn)
   def make_sim() = new Simulation(this)
@@ -57,9 +57,6 @@ case class Scenario(
       Util.log("Priority: " + ScenarioUtil.basic_stats(agents.map(_.wallet.priority)))
       Util.log_pop
     }
-
-    Util.log("System wallet rates:")
-    Util.log(system_wallet.toString)
   }
 
   def diff(other: Scenario): Unit = {
@@ -79,7 +76,7 @@ case class Scenario(
   def serialize(w: StateWriter) {
     w.strings(name, map_fn)
     w.lists(agents, intersections)
-    w.obj(system_wallet)
+    w.obj(sim_config)
   }
 }
 
@@ -88,7 +85,7 @@ object Scenario {
     r.string, r.string,
     Range(0, r.int).map(_ => MkAgent.unserialize(r)).toArray,
     Range(0, r.int).map(_ => MkIntersection.unserialize(r)).toArray,
-    SystemWalletConfig.unserialize(r)
+    SimConfig.unserialize(r)
   )
 
   def load(fn: String) = unserialize(Util.reader(fn))
@@ -100,7 +97,7 @@ object Scenario {
       map_fn,
       AgentDistribution.default(graph),
       IntersectionDistribution.default(graph),
-      SystemWalletConfig()
+      SimConfig()
     )
     // Always save it, so resimulation is easy.
     Util.mkdir("scenarios")
@@ -235,6 +232,20 @@ object MkIntersection {
   def unserialize(r: StateReader) = MkIntersection(
     new VertexID(r.int), IntersectionType(r.int), OrderingType(r.int)
   )
+}
+
+case class SimConfig(
+  tollbooth_weight: Double = 0.1,
+  system_wallet: SystemWalletConfig = SystemWalletConfig()
+) extends Serializable {
+  def serialize(w: StateWriter) {
+    w.double(tollbooth_weight)
+    w.obj(system_wallet)
+  }
+}
+
+object SimConfig {
+  def unserialize(r: StateReader) = SimConfig(r.int, SystemWalletConfig.unserialize(r))
 }
 
 case class SystemWalletConfig(

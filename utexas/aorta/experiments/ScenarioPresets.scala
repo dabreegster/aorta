@@ -20,7 +20,9 @@ object ScenarioPresets {
     case "auctions_enable_auctions" => s.copy(
       intersections = s.intersections.map(_.copy(ordering = OrderingType.Auction))
     )
-    case "auctions_disable_sysbids" => s.copy(system_wallet = SystemWalletConfig.blank)
+    case "auctions_disable_sysbids" => s.copy(sim_config = s.sim_config.copy(
+      system_wallet = SystemWalletConfig.blank
+    ))
     case "auctions_equal_budgets" => s.copy(
       agents = s.agents.map(a => a.copy(wallet = a.wallet.copy(budget = 1, policy = WalletType.Static)))
     )

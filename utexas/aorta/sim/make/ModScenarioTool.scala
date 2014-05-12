@@ -69,13 +69,8 @@ object ModScenarioTool {
     } catch {
       case _: Throwable => {
         Util.log(s"Initializing empty scenario on $input...")
-        s = Scenario(
-          s"scenarios/empty_${input}", input, Array(), Array(),
-          SystemWalletConfig()
-        )
-        s = s.copy(
-          intersections = IntersectionDistribution.default(graph)
-        )
+        s = Scenario(s"scenarios/empty_${input}", input, Array(), Array(), SimConfig())
+        s = s.copy(intersections = IntersectionDistribution.default(graph))
       }
     }
 
@@ -186,7 +181,7 @@ object ModScenarioTool {
             sys.exit
           }
 
-          var wallet = s.system_wallet
+          var wallet = s.sim_config.system_wallet
           params.foreach(pair => wallet = pair match {
             case ("thruput_bonus", x) => wallet.copy(thruput_bonus = x.toInt)
             case ("avail_capacity_threshold", x) => wallet.copy(avail_capacity_threshold = x.toInt)
@@ -197,7 +192,7 @@ object ModScenarioTool {
           })
 
           Util.log(s"Changing system wallet configuration: $wallet")
-          s = s.copy(system_wallet = wallet)
+          s = s.copy(sim_config = s.sim_config.copy(system_wallet = wallet))
         }
         case "--preset" => {
           val preset = shift_args

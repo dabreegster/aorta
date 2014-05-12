@@ -59,10 +59,6 @@ class FreeflowRouter(graph: Graph) extends AbstractAstarRouter(graph) with Simpl
   )
 }
 
-object TollboothRouter {
-  var toll_weight = 0.1
-}
-
 class TollboothRouter(graph: Graph) extends AbstractAstarRouter(graph) {
   // TODO cache this among drivers!
   private val max_actual_time = graph.roads.map(_.freeflow_time).max
@@ -82,7 +78,8 @@ class TollboothRouter(graph: Graph) extends AbstractAstarRouter(graph) {
       val price = prev.to.intersection.tollbooth.toll(turn)   // not gonna normalize
       val time = next.freeflow_time / max_actual_time
       val priority = owner.wallet.priority
-      TollboothRouter.toll_weight * (1 - priority) * price + priority * time
+      val weight = owner.sim.scenario.sim_config.tollbooth_weight
+      weight * (1 - priority) * price + priority * time
     }
   )
 }
