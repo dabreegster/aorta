@@ -140,10 +140,6 @@ class Ticket(val a: Agent, val turn: Turn) extends Ordered[Ticket] with Serializ
       earliest_start <= 10.0
     }
 
-  // If we're part of gridlock and we have a choice, bail out.
-  def should_cancel() =
-    turn.from.next_turns.size > 1 && Intersection.detect_gridlock(turn)
-
   def duration = done_tick - accept_tick
   def stat = EV_TurnFinished(a, turn.vert, req_tick, accept_tick, done_tick, cost_paid)
 }

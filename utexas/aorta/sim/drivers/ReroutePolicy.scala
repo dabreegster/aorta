@@ -6,6 +6,7 @@ package utexas.aorta.sim.drivers
 
 import utexas.aorta.map.{Edge, Turn, TollboothRouter, Road}
 import utexas.aorta.sim.{EV_Transition, EV_Reroute}
+import utexas.aorta.sim.intersections.{Ticket, Intersection}
 import utexas.aorta.common.algorithms.Pathfind
 
 // Responsible for requesting reroutes
@@ -41,6 +42,18 @@ abstract class ReroutePolicy(a: Agent) {
 
   // only called for optional rerouting
   def approve_reroute(old_path: List[Road], new_path: List[Road]) = true
+
+  // If we're part of gridlock and we have a choice, bail out. If not, totally fine to keep the
+  // ticket.
+  def pick_alt_turn(ticket: Ticket) =
+    // Getting impatient? This is a late reaction to gridlock.
+    if (ticket.turn.from.next_turns.size > 1 && Intersection.detect_gridlock(ticket.turn)) {
+      val e = ticket.turn.from
+      a.route.optional_reroute(e)
+      a.route.pick_turn(e)
+    } else {
+      ticket.turn
+    }
 }
 
 class NeverReroutePolicy(a: Agent) extends ReroutePolicy(a)

@@ -22,7 +22,7 @@ abstract class Route(val goal: Road, reroute_policy_type: ReroutePolicyType.Valu
 
   protected var owner: Agent = null
   protected var debug_me = false  // TODO just grab from owner?
-  protected var reroute_policy: ReroutePolicy = null // TODO is it transient?
+  var reroute_policy: ReroutePolicy = null // TODO is it transient?
 
   //////////////////////////////////////////////////////////////////////////////
   // Meta
@@ -40,10 +40,6 @@ abstract class Route(val goal: Road, reroute_policy_type: ReroutePolicyType.Valu
 
   //////////////////////////////////////////////////////////////////////////////
   // Actions
-
-  def react() {
-    reroute_policy.react()
-  }
 
   // The client tells us they've physically moved
   def transition(from: Traversable, to: Traversable)

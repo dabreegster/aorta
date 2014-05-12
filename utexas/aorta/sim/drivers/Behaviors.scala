@@ -46,7 +46,7 @@ class IdleBehavior(a: Agent) extends Behavior(a) {
 // next few steps.
 class LookaheadBehavior(a: Agent, route: Route) extends Behavior(a) {
   override def choose_turn(e: Edge) = a.get_ticket(e).get.turn
-  
+
   override def transition(from: Traversable, to: Traversable) {
     route.transition(from, to)
     a.lc.target_lane = None
@@ -59,7 +59,7 @@ class LookaheadBehavior(a: Agent, route: Route) extends Behavior(a) {
   }
 
   def choose_action(): Action = {
-    a.route.react()
+    a.route.reroute_policy.react()
     a.lc.decide_lc()
     val accel = max_safe_accel
     return accel
@@ -236,13 +236,10 @@ class LookaheadBehavior(a: Agent, route: Route) extends Behavior(a) {
       a.add_ticket(ticket)
       e.to.intersection.request_turn(ticket)
     }
-    // Getting impatient? This is a late reaction to gridlock.
+    // Change existing turn?
     a.get_ticket(e) match {
-      // TODO this is a policy thing!
-      case Some(ticket) if ticket.should_cancel => {
-        // Try again. The routing should avoid choices that're filled up, hopefully avoiding gridlock.
-        route.optional_reroute(e)
-        val next_turn = route.pick_turn(e)
+      case Some(ticket) => {
+        val next_turn = route.reroute_policy.pick_alt_turn(ticket)
         // Sometimes we pick the same turn here, but the later route could change.
         if (next_turn != ticket.turn) {
           // We don't need to cancel later tickets, because there are none. We only cancel
