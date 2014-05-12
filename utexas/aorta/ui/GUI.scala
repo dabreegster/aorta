@@ -58,16 +58,24 @@ object StatusBar {
 
 // TODO SwingApplication has a startup, quit, shutdown...
 object GUI extends SimpleSwingApplication {
+  // TODO pipe in differently
+  val side_by_side = false
+
   val road_types = List(
     "null", "residential", "unclassified", "secondary",
     "motorway_link", "motorway", "trunk_link", "secondary_link", "primary_link",
     "tertiary", "primary", "service"
   )
   // null just because it's parametric from argv
-  var canvas_2d: MapCanvas = null
+  var primary_canvas_2d: MapCanvas = null
+  // for side-by-side mode
+  var secondary_canvas_2d: MapCanvas = null
   val layer_menu = new Menu("Road Color Layer")
 
+  // TODO use this finally?
   val helper = new BoxPanel(Orientation.Vertical) {
+    preferredSize = new Dimension(Int.MaxValue, Int.MaxValue)
+
     border = Swing.MatteBorder(5, 5, 5, 5, Color.BLACK)
     yLayoutAlignment = java.awt.Component.TOP_ALIGNMENT
     // TODO These're fixed now, but the idea is to tie them to configuration and
@@ -107,15 +115,15 @@ object GUI extends SimpleSwingApplication {
 
   override def main(args: Array[String]) {
     val sim = Util.process_args(args)
-    canvas_2d = new MapCanvas(sim)
+    primary_canvas_2d = new MapCanvas(sim)
     // TODO doesnt start drawn correctly!
-    canvas_2d.repaint
+    primary_canvas_2d.repaint
     super.main(args)
   }
 
   def launch_from_headless(canvas: MapCanvas) {
     headless = true
-    canvas_2d = canvas
+    primary_canvas_2d = canvas
     super.main(Array())
   }
 
@@ -133,7 +141,7 @@ object GUI extends SimpleSwingApplication {
         sys.exit
       }
     }
-    
+
     menuBar = new MenuBar {
       contents += new Menu("File") {
         contents += new Separator
@@ -145,44 +153,51 @@ object GUI extends SimpleSwingApplication {
       contents += new Menu("View") {
         contents += new Menu("Highlight type of road") {
           contents ++= road_types.map(t => new MenuItem(Action(t) {
-            canvas_2d.handle_ev(EV_Param_Set("highlight", Some(t)))
+            primary_canvas_2d.handle_ev(EV_Param_Set("highlight", Some(t)))
           }))
         }
         contents += new MenuItem(Action("Clear all highlighting") {
-          canvas_2d.handle_ev(EV_Param_Set("highlight", None))
+          primary_canvas_2d.handle_ev(EV_Param_Set("highlight", None))
         })
       }
 
       contents += new Menu("Query") {
         contents += new MenuItem(Action("Teleport to Edge") {
-          canvas_2d.handle_ev(EV_Action("teleport-edge"))
+          primary_canvas_2d.handle_ev(EV_Action("teleport-edge"))
         })
         contents += new MenuItem(Action("Teleport to Road") {
-          canvas_2d.handle_ev(EV_Action("teleport-road"))
+          primary_canvas_2d.handle_ev(EV_Action("teleport-road"))
         })
         contents += new MenuItem(Action("Teleport to Agent") {
-          canvas_2d.handle_ev(EV_Action("teleport-agent"))
+          primary_canvas_2d.handle_ev(EV_Action("teleport-agent"))
         })
         contents += new MenuItem(Action("Teleport to Vertex") {
-          canvas_2d.handle_ev(EV_Action("teleport-vertex"))
+          primary_canvas_2d.handle_ev(EV_Action("teleport-vertex"))
         })
-        
+
         contents += new MenuItem(Action("Clear Route") {
-          canvas_2d.handle_ev(EV_Action("clear-route"))
+          primary_canvas_2d.handle_ev(EV_Action("clear-route"))
         })
       }
       contents += layer_menu
     }
 
-    // TODO toggle between helper and other stuff in right pane
-    val main_content = canvas_2d
-
-    contents = new BorderPanel {
+    val main_split = new BorderPanel {
       background = Color.LIGHT_GRAY
       border = Swing.MatteBorder(2, 2, 2, 2, Color.RED)
 
       add(StatusBar.panel, BorderPanel.Position.North)
-      add(main_content, BorderPanel.Position.Center)
+      add(primary_canvas_2d, BorderPanel.Position.Center)
+    }
+
+    if (side_by_side) {
+      // TODO resizing entire window doesn't work great yet
+      // TODO secondary_canvas_2d, not the helper. helper just to test.
+      contents = new SplitPane(Orientation.Vertical, main_split, helper) {
+        dividerLocation = 400
+      }
+    } else {
+      contents = main_split
     }
   }
 }

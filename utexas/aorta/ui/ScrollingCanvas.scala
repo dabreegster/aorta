@@ -24,8 +24,7 @@ case class Tooltip(x: Double, y: Double, lines: List[String], dark: Boolean)
 
 // SuperMixin lets us get tab back
 abstract class ScrollingCanvas extends Component {
-  // TODO percentages, ideally!
-  preferredSize = new Dimension(600, Int.MaxValue)
+  preferredSize = new Dimension(Int.MaxValue, Int.MaxValue)
 
   override def focusable = true   // for keys to work
 
