@@ -125,6 +125,45 @@ object GUI extends SimpleSwingApplication {
       primary_canvas_2d = new MapCanvas(Util.process_args(args))
     }
 
+    if (!headless) {
+      // Fire steps every now and then. Secondary sim will stay synched to primary.
+      new Thread {
+        override def run() {
+          while (true) {
+            val state = primary_canvas_2d.get_state
+            if (state.running && state.speed_cap > 0) {
+              val start_time = System.currentTimeMillis
+              primary_canvas_2d.sim.step()
+              if (secondary_canvas_2d == null) {
+                primary_canvas_2d.rerender()
+              } else {
+                secondary_canvas_2d.sim.step()
+                primary_canvas_2d.rerender()
+                secondary_canvas_2d.rerender()
+              }
+
+              // Rate-limit, if need be.
+              // In order to make speed_cap ticks per second, each tick needs to
+              // last 1000 / speed_cap milliseconds.
+              val goal =
+                if (state.speed_cap > 0)
+                  (1000 / state.speed_cap).toInt
+                else
+                  0
+              val dt_ms = System.currentTimeMillis - start_time
+              if (dt_ms < goal) {
+                // Ahead of schedule. Sleep.
+                Thread.sleep(goal - dt_ms)
+              }
+            } else {
+              // Just avoid thrashing the CPU.
+              Thread.sleep(100)
+            }
+          }
+        }
+      }.start()
+    }
+
     // TODO doesnt start drawn correctly!
     primary_canvas_2d.repaint
     super.main(args)
@@ -237,13 +276,13 @@ class GUIDebugger(sim: Simulation) {
         }
         case None => {
           println("Launching the GUI...")
-          gui = Some(new MapCanvas(sim, headless = true))
+          gui = Some(new MapCanvas(sim))
           GUI.launch_from_headless(gui.get)
         }
       }
     }
     gui match {
-      case Some(ui) if !GUI.closed => ui.handle_ev(EV_Action("step"))
+      case Some(ui) if !GUI.closed => ui.handle_ev(EV_Action("render"))
       case _ =>
     }
   }})

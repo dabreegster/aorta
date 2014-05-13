@@ -59,7 +59,7 @@ trait Controls {
   }
 
   def handle_ev_action(ev: String): Unit = ev match {
-    case "step" => canvas.repaint()
+    case "render" => canvas.repaint()
     case "toggle-running" => {
       // TODO move toggle method to state
       if (state.running) {
@@ -200,7 +200,9 @@ trait Controls {
     case Key.T => state.show_tooltips = !state.show_tooltips
     case Key.S => {
       if (!state.running) {
-        canvas.step_sim()
+        // TODO if we're side-by-side, update both
+        sim.step()
+        canvas.rerender()
       }
     }
     case Key.I => AccelerationScheme.enabled = !AccelerationScheme.enabled

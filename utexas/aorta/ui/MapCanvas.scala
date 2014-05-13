@@ -83,12 +83,13 @@ class GuiState(val canvas: MapCanvas) {
   def bubble(pt: Coordinate) = new Ellipse2D.Double(pt.x - eps, pt.y - eps, eps * 2, eps * 2)
 }
 
-class MapCanvas(val sim: Simulation, headless: Boolean = false)
-  extends ScrollingCanvas with Controls with Visualization
-{
+class MapCanvas(val sim: Simulation) extends ScrollingCanvas with Controls with Visualization {
   //////////////////////////////////////////////////////////////////////////////
   // State
   private val state = new GuiState(this)
+
+  // TODO only one use right now, maybe avoidable
+  def get_state = state
 
   val statusbar = new StatusBar()
 
@@ -162,38 +163,6 @@ class MapCanvas(val sim: Simulation, headless: Boolean = false)
     case _ =>
   })
 
-  // Headless mode might be controlling us...
-  if (!headless) {
-    // fire steps every now and then
-    new Thread {
-      override def run() {
-        while (true) {
-          if (state.running && state.speed_cap > 0) {
-            val start_time = System.currentTimeMillis
-            step_sim()
-
-            // Rate-limit, if need be.
-            // In order to make speed_cap ticks per second, each tick needs to
-            // last 1000 / speed_cap milliseconds.
-            val goal =
-              if (state.speed_cap > 0)
-                (1000 / state.speed_cap).toInt
-              else
-                0
-            val dt_ms = System.currentTimeMillis - start_time
-            if (dt_ms < goal) {
-              // Ahead of schedule. Sleep.
-              Thread.sleep(goal - dt_ms)
-            }
-          } else {
-            // Just avoid thrashing the CPU.
-            Thread.sleep(100)
-          }
-        }
-      }
-    }.start()
-  }
-
   sim.listen(classOf[EV_Signal_Change], _ match { case EV_Signal_Change(greens) => {
     green_turns.clear()
     for (t <- greens) {
@@ -212,8 +181,7 @@ class MapCanvas(val sim: Simulation, headless: Boolean = false)
   //////////////////////////////////////////////////////////////////////////////
   // Actions
 
-  def step_sim() {
-    sim.step()
+  def rerender() {
     state.camera_agent match {
       case Some(a) => {
         if (sim.has_agent(a)) {
@@ -230,7 +198,7 @@ class MapCanvas(val sim: Simulation, headless: Boolean = false)
     // Only render every 0.2 seconds
     val now = System.currentTimeMillis
     if (now - last_render > cfg.render_ms && sim.tick != tick_last_render ) {
-      handle_ev(EV_Action("step"))
+      handle_ev(EV_Action("render"))
       last_render = now
       tick_last_render = sim.tick
     }
