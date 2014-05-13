@@ -175,7 +175,7 @@ class MapCanvas(val sim: Simulation, headless: Boolean = false)
             // Rate-limit, if need be.
             // In order to make speed_cap ticks per second, each tick needs to
             // last 1000 / speed_cap milliseconds.
-            val goal = 
+            val goal =
               if (state.speed_cap > 0)
                 (1000 / state.speed_cap).toInt
               else

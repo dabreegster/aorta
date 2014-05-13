@@ -52,6 +52,9 @@ class Graph(
 }
 
 // It's a bit funky, but the actual graph instance doesn't have this; we do.
+// TODO This is the only remaining global mutable state singleton remaining as of May 2014, and
+// there's a proper fix that's hard. For now, leave it, it's fine, just can't simultaneously
+// simulate unless both sims use the same map.
 object Graph {
   var width = 0.0
   var height = 0.0
@@ -76,8 +79,12 @@ object Graph {
     (x / scale) - xoff, ((height - y) / scale) - yoff
   )
 
+  // TODO traversables have Queues and vertices have Intersections for speed
+  // Set fresh_copy to true to force a new version of everything, otherwise caching'll return the
+  // same copy
+  var fresh_copy = false
   def load(fn: String): Graph = {
-    if (!cached_graphs.contains(fn)) {
+    if (fresh_copy || !cached_graphs.contains(fn)) {
       print(s"Loading $fn...")
       cached_graphs(fn) = unserialize(Util.reader(fn))
       println(s"\rLoaded $fn.     ")

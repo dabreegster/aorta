@@ -11,6 +11,7 @@ import javax.swing.WindowConstants
 import java.io.File
 
 import utexas.aorta.sim.{Simulation, EV_Heartbeat}
+import utexas.aorta.map.Graph
 import utexas.aorta.analysis.SimREPL
 import utexas.aorta.common.{Util, cfg}
 
@@ -58,9 +59,6 @@ class StatusBar() {
 
 // TODO SwingApplication has a startup, quit, shutdown...
 object GUI extends SimpleSwingApplication {
-  // TODO pipe in differently
-  val side_by_side = false
-
   val road_types = List(
     "null", "residential", "unclassified", "secondary",
     "motorway_link", "motorway", "trunk_link", "secondary_link", "primary_link",
@@ -71,6 +69,8 @@ object GUI extends SimpleSwingApplication {
   // for side-by-side mode
   var secondary_canvas_2d: MapCanvas = null
   val layer_menu = new Menu("Road Color Layer")
+
+  def side_by_side = secondary_canvas_2d != null
 
   // TODO use this finally?
   val helper = new BoxPanel(Orientation.Vertical) {
@@ -114,8 +114,17 @@ object GUI extends SimpleSwingApplication {
   var closed = false
 
   override def main(args: Array[String]) {
-    val sim = Util.process_args(args)
-    primary_canvas_2d = new MapCanvas(sim)
+    // TODO this'll clobber one sim and one flag, right?
+    if (args.size == 2) {
+      primary_canvas_2d = new MapCanvas(Util.process_args(Array(args(0))))
+      // TODO slightly messy hack for now.
+      Graph.fresh_copy = true
+      secondary_canvas_2d = new MapCanvas(Util.process_args(Array(args(1))))
+      Graph.fresh_copy = false
+    } else {
+      primary_canvas_2d = new MapCanvas(Util.process_args(args))
+    }
+
     // TODO doesnt start drawn correctly!
     primary_canvas_2d.repaint
     super.main(args)
@@ -191,9 +200,16 @@ object GUI extends SimpleSwingApplication {
     }
 
     if (side_by_side) {
+      val secondary_split = new BorderPanel {
+        background = Color.LIGHT_GRAY
+        border = Swing.MatteBorder(2, 2, 2, 2, Color.RED)
+
+        add(secondary_canvas_2d.statusbar.panel, BorderPanel.Position.North)
+        add(secondary_canvas_2d, BorderPanel.Position.Center)
+      }
+
       // TODO resizing entire window doesn't work great yet
-      // TODO secondary_canvas_2d, not the helper. helper just to test.
-      contents = new SplitPane(Orientation.Vertical, main_split, helper) {
+      contents = new SplitPane(Orientation.Vertical, main_split, secondary_split) {
         dividerLocation = 400
       }
     } else {
