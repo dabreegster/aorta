@@ -10,12 +10,16 @@ import utexas.aorta.common.{Util, EdgeID, VertexID, TurnID, RoadID, BinaryStateW
 import scala.collection.mutable
 
 object Builder {
+  // osm/foo.osm [--disable_pruning] [whitelist_osm]
   def main(args: Array[String]) {
-    convert(args.head, args.tail.headOption)
+    // TODO real argv parsing
+    val use_pruning = args.tail.headOption.getOrElse("") != "--disable_pruning"
+    val whitelist = if (use_pruning) args.tail.headOption else args.tail.tail.headOption
+    convert(args.head, whitelist, use_pruning)
   }
 
   // Takes a .osm and returns a .map
-  def convert(input: String, whitelist_fn: Option[String]): String = {
+  def convert(input: String, whitelist_fn: Option[String], use_pruning: Boolean): String = {
     if (!input.endsWith(".osm")) {
       throw new Exception(s"$input must end with .osm")
     }
@@ -42,7 +46,9 @@ object Builder {
     // Pass 3
     val graph3 = new PreGraph3(graph2)
     new Pass3_Part2(graph3).run()
-    new Pass3_Part3(graph3).run()
+    if (use_pruning) {
+      new Pass3_Part3(graph3).run()
+    }
     val remap_lines = new Pass3_Part4(graph3).run()
     bldgs.group(graph3)
 
