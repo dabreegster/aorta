@@ -17,6 +17,7 @@ import utexas.aorta.sim.drivers.Agent
 
 import utexas.aorta.common.{Util, cfg, StateWriter, StateReader, Flags, AgentID, Publisher,
                             VertexID, EdgeID, RoadID, Timer}
+import utexas.aorta.common.algorithms.PathfindingFailedException
 import utexas.aorta.analysis.RerouteCountMonitor
 
 class Simulation(val scenario: Scenario) extends Publisher with AgentManager {
@@ -169,7 +170,14 @@ class Simulation(val scenario: Scenario) extends Publisher with AgentManager {
         if (omit == a.id) {
           Util.log(s"$a would have been created, but omitting")
         } else {
-          a.setup(e, spawn.start_dist)
+          try {
+            a.setup(e, spawn.start_dist)
+          } catch {
+            case _: PathfindingFailedException => {
+              Util.log(s"WARNING: No path from source to destination for $spawn")
+              return false
+            }
+          }
         }
         publish(EV_AgentSpawned(a))
         return true
