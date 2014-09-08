@@ -1,0 +1,5 @@
+#!/bin/bash
+# Run from the base AORTA directory: ./tools/spawn_example
+
+. common
+$SCALA utexas.aorta.contrib.Spawner $@
